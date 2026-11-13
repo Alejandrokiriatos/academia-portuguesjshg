@@ -77,8 +77,8 @@ const sounds=[["ÃO","pão · não · coração","El sonido nasal se produce dej
 document.getElementById("soundList").innerHTML=sounds.map(s=>'<div class="phrase"><b>'+s[0]+'</b><button class="speak" onclick="speak('+JSON.stringify(s[1].split(" · ")[0])+')">🔊 Escuchar</button><p style="margin:6px 0 0">'+s[1]+'</p><small>'+s[2]+'</small></div>').join("");
 renderStats();renderLessons();renderWords();drawQuiz();
 
-function enterModule(which){document.getElementById("chooser").classList.add("hidden");document.getElementById("memoryModule").classList.toggle("hidden",which!=="memory");document.querySelector(".app").classList.toggle("hidden",which!=="portuguese");document.body.classList.add("inside-module");if(which==="portuguese")showTab("curso");}
-function showChooser(){document.getElementById("chooser").classList.remove("hidden");document.getElementById("memoryModule").classList.add("hidden");document.querySelector(".app").classList.add("hidden");document.body.classList.remove("inside-module");}
+function enterModule(which){document.getElementById("chooser").classList.add("hidden");document.getElementById("memoryModule").classList.toggle("hidden",which!=="memory");document.getElementById("gameModule").classList.toggle("hidden",which!=="game");document.querySelector(".app").classList.toggle("hidden",which!=="portuguese");document.body.classList.add("inside-module");if(which==="portuguese")showTab("curso");}
+function showChooser(){document.getElementById("chooser").classList.remove("hidden");document.getElementById("memoryModule").classList.add("hidden");document.getElementById("gameModule").classList.add("hidden");document.querySelector(".app").classList.add("hidden");document.body.classList.remove("inside-module");}
 </script>
 </body>
 </html>
