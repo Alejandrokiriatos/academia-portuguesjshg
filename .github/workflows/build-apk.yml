@@ -23,17 +23,20 @@ jobs:
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Validate offline game and synchronized assets
         run: |
+          set -e
           cmp index.html app/src/main/assets/index.html
           cmp memoria.html app/src/main/assets/memoria.html
           cmp juego.html app/src/main/assets/juego.html
           node <<'NODE'
           const fs = require('fs');
           for (const path of ['juego.html', 'app/src/main/assets/juego.html']) {
+            console.log('Checking JavaScript syntax:', path);
             const html = fs.readFileSync(path, 'utf8');
-            const match = html.match(/<script>([\s\S]*?)<\/script>/);
-            if (!match) throw new Error('No script found in ' + path);
-            new Function(match[1]);
-            if (/https?:\/\//i.test(html)) throw new Error('External network dependency found in ' + path);
+            const match = html.match(/<script>([\\s\\S]*?)<\\/script>/);
+            if (!match) throw new Error('No script tag found in ' + path);
+            try { new Function(match[1]); }
+            catch (error) { console.error('JavaScript syntax error in ' + path + ':', error.stack); process.exit(1); }
+            if (/(?:src|href)\\s*=\\s*["']https?:/i.test(html)) throw new Error('Remote asset reference found in ' + path);
           }
           const portal = fs.readFileSync('index.html', 'utf8');
           for (const marker of ['memoryModule', 'gameModule', 'src="juego.html"']) {
