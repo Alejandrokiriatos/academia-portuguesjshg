@@ -48,7 +48,11 @@ namespace RustSurvival.Networking
             if (GUILayout.Button("JUGAR SOLO — SIN INTERNET", GUILayout.Height(42)))
             {
                 offlineMode.StartOfflineGame();
-                _status = "Modo local activo. ¡Sobrevive!";
+                if (offlineMode.HasStarted)
+                {
+                    _status = "Modo local activo. ¡Sobrevive!";
+                    showPanel = false;
+                }
             }
 
             GUI.enabled = !offlineStarted && !_busy && sessions != null;
