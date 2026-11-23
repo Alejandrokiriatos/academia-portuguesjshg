@@ -13,7 +13,7 @@ namespace RustSurvival.Player
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (target == null) target = FindObjectOfType<PlayerMovement>();
+            if (target == null) target = PlayerMovement.LocalPlayer;
             if (target != null) target.SetMobileButton(action, true);
         }
 
