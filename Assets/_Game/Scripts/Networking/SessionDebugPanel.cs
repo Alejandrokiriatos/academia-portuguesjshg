@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using RustSurvival.Core;
 
 namespace RustSurvival.Networking
 {
@@ -8,6 +9,7 @@ namespace RustSurvival.Networking
     public sealed class SessionDebugPanel : MonoBehaviour
     {
         [SerializeField] private NetworkSessionManager sessions;
+        [SerializeField] private OfflineModeController offlineMode;
         [SerializeField] private bool showPanel = true;
 
         private string _joinCode = string.Empty;
@@ -17,6 +19,7 @@ namespace RustSurvival.Networking
         private void Awake()
         {
             if (sessions == null) sessions = FindObjectOfType<NetworkSessionManager>();
+            if (offlineMode == null) offlineMode = FindObjectOfType<OfflineModeController>();
             if (sessions != null)
             {
                 _status = sessions.LastStatus;
@@ -36,11 +39,21 @@ namespace RustSurvival.Networking
         {
             if (!showPanel || !Application.isPlaying) return;
 
-            GUILayout.BeginArea(new Rect(16, 16, 340, 230), GUI.skin.box);
-            GUILayout.Label("RUST SURVIVAL — MULTIPLAYER DEV");
+            GUILayout.BeginArea(new Rect(16, 16, 360, 330), GUI.skin.box);
+            GUILayout.Label("RUST SURVIVAL — PROTOTIPO");
             GUILayout.Label(_status);
 
-            GUI.enabled = !_busy && sessions != null;
+            bool offlineStarted = offlineMode != null && offlineMode.HasStarted;
+            GUI.enabled = !offlineStarted && offlineMode != null;
+            if (GUILayout.Button("JUGAR SOLO — SIN INTERNET", GUILayout.Height(42)))
+            {
+                offlineMode.StartOfflineGame();
+                _status = "Modo local activo. ¡Sobrevive!";
+            }
+
+            GUI.enabled = !offlineStarted && !_busy && sessions != null;
+            GUILayout.Space(6);
+            GUILayout.Label("Multijugador (requiere Unity Services):");
             if (GUILayout.Button("CREAR SALA / HOST (Relay + Lobby)", GUILayout.Height(34)))
                 _ = CreateHostAsync();
 
