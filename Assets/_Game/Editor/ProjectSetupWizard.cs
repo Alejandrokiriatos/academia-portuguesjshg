@@ -433,9 +433,120 @@ namespace RustSurvival.EditorTools
 
             root.AddComponent<NetworkSessionManager>();
             root.AddComponent<NetworkSpawnApproval>();
-            root.AddComponent<SessionDebugPanel>();
+            SessionDebugPanel sessionPanel = root.AddComponent<SessionDebugPanel>();
+            CreatePrototypeMenu(sessionPanel);
         }
 
+        private static void CreatePrototypeMenu(SessionDebugPanel sessionPanel)
+        {
+            GameObject canvasObject = new("StartMenuCanvas");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            canvasObject.AddComponent<GraphicRaycaster>();
+
+            GameObject panel = CreateUiImage("StartMenuPanel", canvasObject.transform,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(600f, 620f), new Color(0.035f, 0.055f, 0.075f, 0.96f));
+
+            CreateMenuText(panel.transform, "GameTitle", "RUST SURVIVAL",
+                new Vector2(0f, 250f), new Vector2(520f, 64f), 44, Color.white);
+            CreateMenuText(panel.transform, "GameSubtitle", "SUPERVIVENCIA  ·  CONSTRUCCIÓN  ·  MUNDO ABIERTO",
+                new Vector2(0f, 205f), new Vector2(520f, 36f), 16, new Color(0.68f, 0.76f, 0.82f));
+
+            Text status = CreateMenuText(panel.transform, "StatusLabel",
+                "Elige cómo quieres jugar.", new Vector2(0f, 150f),
+                new Vector2(500f, 52f), 18, Color.white);
+
+            Button offline = CreateMenuButton(panel.transform, "PlaySoloButton",
+                "JUGAR SOLO  —  SIN INTERNET", new Vector2(0f, 72f),
+                new Vector2(460f, 70f), new Color(0.15f, 0.48f, 0.28f, 1f));
+
+            CreateMenuText(panel.transform, "MultiplayerLabel", "MULTIJUGADOR CON RELAY",
+                new Vector2(0f, 5f), new Vector2(460f, 30f), 18, new Color(0.82f, 0.88f, 0.93f));
+
+            Button host = CreateMenuButton(panel.transform, "CreateHostButton",
+                "CREAR SALA", new Vector2(0f, -48f),
+                new Vector2(460f, 56f), new Color(0.20f, 0.30f, 0.42f, 1f));
+
+            GameObject inputObject = CreateUiImage("JoinCodeInput", panel.transform,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(-105f, -120f), new Vector2(250f, 54f), new Color(0.93f, 0.95f, 0.97f, 1f));
+            InputField joinCode = inputObject.AddComponent<InputField>();
+            Text inputText = CreateMenuText(inputObject.transform, "InputText", "",
+                Vector2.zero, new Vector2(220f, 46f), 22, new Color(0.06f, 0.08f, 0.10f));
+            Text placeholder = CreateMenuText(inputObject.transform, "Placeholder",
+                "CÓDIGO", Vector2.zero, new Vector2(220f, 46f), 20,
+                new Color(0.38f, 0.42f, 0.46f));
+            joinCode.textComponent = inputText;
+            joinCode.placeholder = placeholder;
+            joinCode.characterLimit = 12;
+            joinCode.characterValidation = InputField.CharacterValidation.Alphanumeric;
+
+            Button join = CreateMenuButton(panel.transform, "JoinLobbyButton",
+                "UNIRSE", new Vector2(145f, -120f),
+                new Vector2(170f, 54f), new Color(0.20f, 0.30f, 0.42f, 1f));
+
+            Button leave = CreateMenuButton(panel.transform, "LeaveLobbyButton",
+                "SALIR DE LA SALA", new Vector2(0f, -195f),
+                new Vector2(460f, 48f), new Color(0.35f, 0.20f, 0.20f, 1f));
+
+            CreateMenuText(panel.transform, "Footer",
+                "El modo solo funciona sin conexión. Relay necesita Unity Services.",
+                new Vector2(0f, -265f), new Vector2(500f, 36f), 14,
+                new Color(0.58f, 0.66f, 0.72f));
+
+            SetObjectField(sessionPanel, "panelRoot", panel);
+            SetObjectField(sessionPanel, "statusLabel", status);
+            SetObjectField(sessionPanel, "joinCodeInput", joinCode);
+            SetObjectField(sessionPanel, "offlineButton", offline);
+            SetObjectField(sessionPanel, "createHostButton", host);
+            SetObjectField(sessionPanel, "joinButton", join);
+            SetObjectField(sessionPanel, "leaveButton", leave);
+        }
+
+        private static Button CreateMenuButton(Transform parent, string name, string label,
+            Vector2 position, Vector2 size, Color color)
+        {
+            GameObject buttonObject = CreateUiImage(name, parent,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                position, size, color);
+
+            Button button = buttonObject.AddComponent<Button>();
+            button.targetGraphic = buttonObject.GetComponent<Image>();
+            button.transition = Selectable.Transition.ColorTint;
+
+            CreateMenuText(buttonObject.transform, name + "Label", label,
+                Vector2.zero, size - new Vector2(18f, 8f), 20, Color.white);
+            return button;
+        }
+
+        private static Text CreateMenuText(Transform parent, string name, string value,
+            Vector2 position, Vector2 size, int fontSize, Color color)
+        {
+            GameObject textObject = new(name);
+            textObject.transform.SetParent(parent, false);
+            RectTransform rect = textObject.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+
+            Text text = textObject.AddComponent<Text>();
+            text.text = value;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = color;
+            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.raycastTarget = false;
+            return text;
+        }
 
         private static void CreateSurvivalHud()
         {
