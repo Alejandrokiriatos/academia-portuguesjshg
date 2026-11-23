@@ -60,7 +60,21 @@ namespace RustSurvival.Resources
                 return;
 
             NetworkObject playerObject = client.PlayerObject;
-            if (playerObject == null || Vector3.Distance(playerObject.transform.position, target.transform.position) > reach + 0.75f)
+            if (playerObject == null ||
+                Vector3.Distance(playerObject.transform.position, target.transform.position) > reach + 0.75f)
+                return;
+
+            // Server checks line of sight as well as distance; clients cannot harvest
+            // a node through walls or by sending arbitrary nearby object IDs.
+            Vector3 eye = playerObject.transform.position + Vector3.up * 1.5f;
+            Vector3 toTarget = target.transform.position + Vector3.up * 0.5f - eye;
+            float targetDistance = toTarget.magnitude;
+            if (targetDistance > reach + 0.75f || targetDistance <= 0.01f)
+                return;
+            if (!Physics.Raycast(eye, toTarget / targetDistance, out RaycastHit serverHit,
+                    targetDistance + 0.25f, ~0, QueryTriggerInteraction.Ignore))
+                return;
+            if (serverHit.collider.GetComponentInParent<ResourceNode>() != node)
                 return;
 
             PlayerInventory inventory = playerObject.GetComponent<PlayerInventory>();
