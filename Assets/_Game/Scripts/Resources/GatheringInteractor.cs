@@ -42,10 +42,18 @@ namespace RustSurvival.Resources
                 return;
 
             ResourceNode node = hit.collider.GetComponentInParent<ResourceNode>();
-            if (node == null || !node.NetworkObject.IsSpawned) return;
+            if (node == null) return;
 
             if (IsSpawned)
-                RequestHarvestServerRpc(node.NetworkObjectId);
+            {
+                if (node.NetworkObject != null && node.NetworkObject.IsSpawned)
+                    RequestHarvestServerRpc(node.NetworkObjectId);
+            }
+            else
+            {
+                PlayerInventory inventory = GetComponent<PlayerInventory>();
+                node.ApplyHarvestOffline(inventory, harvestDamage);
+            }
         }
 
         [ServerRpc]
