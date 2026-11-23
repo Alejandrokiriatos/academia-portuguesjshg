@@ -12,6 +12,7 @@ namespace RustSurvival.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerMovement : NetworkBehaviour
     {
+        public static PlayerMovement LocalPlayer { get; private set; }
         [Header("Movement")]
         [SerializeField, Min(0.1f)] private float walkSpeed = 4.5f;
         [SerializeField, Min(0.1f)] private float sprintSpeed = 7.2f;
@@ -114,6 +115,7 @@ namespace RustSurvival.Player
         public override void OnNetworkSpawn()
         {
             bool isLocalPlayer = IsOwner;
+            if (isLocalPlayer) LocalPlayer = this;
 
             if (moveJoystick == null) moveJoystick = FindObjectOfType<MobileJoystick>();
             if (lookArea == null) lookArea = FindObjectOfType<MobileLookArea>();
@@ -124,6 +126,11 @@ namespace RustSurvival.Player
                 AudioListener listener = ownerCamera.GetComponent<AudioListener>();
                 if (listener != null) listener.enabled = isLocalPlayer;
             }
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (LocalPlayer == this) LocalPlayer = null;
         }
 
         private void Update()
