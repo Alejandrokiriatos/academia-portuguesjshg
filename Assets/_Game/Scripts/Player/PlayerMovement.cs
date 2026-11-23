@@ -131,6 +131,8 @@ namespace RustSurvival.Player
         public void InitializeOfflineOwner()
         {
             LocalPlayer = this;
+            if (moveJoystick == null) moveJoystick = FindObjectOfType<MobileJoystick>();
+            if (lookArea == null) lookArea = FindObjectOfType<MobileLookArea>();
             if (ownerCamera != null)
             {
                 ownerCamera.enabled = true;
