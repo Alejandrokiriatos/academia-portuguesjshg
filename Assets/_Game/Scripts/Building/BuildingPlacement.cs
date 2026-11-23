@@ -124,6 +124,12 @@ namespace RustSurvival.Building
             _yaw = (_yaw + 90f) % 360f;
         }
 
+        public void SelectNextStructure()
+        {
+            if (structurePrefabs == null || structurePrefabs.Length == 0) return;
+            SelectStructure((_selectedIndex + 1) % structurePrefabs.Length);
+        }
+
         public void PlaceCurrent()
         {
             if (!_buildMode || !_localCanPlace || structurePrefabs == null ||
