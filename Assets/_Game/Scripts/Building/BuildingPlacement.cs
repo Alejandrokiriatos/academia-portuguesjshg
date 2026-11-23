@@ -182,6 +182,21 @@ namespace RustSurvival.Building
             }
 
             _ghost.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, _yaw, 0f));
+
+            // Lift each piece so its lowest visible point rests on the surface,
+            // rather than placing the object's pivot halfway below the terrain.
+            float lowestY = float.PositiveInfinity;
+            foreach (Renderer renderer in _ghostRenderers)
+            {
+                if (renderer != null)
+                    lowestY = Mathf.Min(lowestY, renderer.bounds.min.y);
+            }
+            if (!float.IsInfinity(lowestY))
+            {
+                position.y += hit.point.y - lowestY;
+                _ghost.transform.position = position;
+            }
+
             _localCanPlace = CanPlaceAt(position, _yaw, transform);
             UpdateGhostMaterial(_localCanPlace);
         }
