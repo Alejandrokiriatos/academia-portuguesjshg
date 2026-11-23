@@ -62,13 +62,13 @@ namespace RustSurvival.Survival
 
         private void Update()
         {
-            if (IsSpawned && IsOwner)
+            if (!IsSpawned || IsOwner)
             {
-                if (_eatAction.WasPressedThisFrame()) ConsumeFoodServerRpc();
-                if (_drinkAction.WasPressedThisFrame()) ConsumeWaterServerRpc();
+                if (_eatAction.WasPressedThisFrame()) TryConsumeFood();
+                if (_drinkAction.WasPressedThisFrame()) TryConsumeWater();
             }
 
-            if (!IsServer || !IsSpawned) return;
+            if (IsSpawned && !IsServer) return;
 
             _tick += Time.deltaTime;
             if (_tick < 1f) return;
@@ -86,8 +86,39 @@ namespace RustSurvival.Survival
                 Health.Value = Mathf.Max(0f, Health.Value - damage * elapsed);
         }
 
+        public void TryConsumeFood()
+        {
+            if (IsSpawned && !IsServer)
+            {
+                ConsumeFoodServerRpc();
+                return;
+            }
+            ConsumeFoodAuthoritative();
+        }
+
+        public void TryConsumeWater()
+        {
+            if (IsSpawned && !IsServer)
+            {
+                ConsumeWaterServerRpc();
+                return;
+            }
+            ConsumeWaterAuthoritative();
+        }
+
         [ServerRpc]
-        public void ConsumeFoodServerRpc()
+        private void ConsumeFoodServerRpc()
+        {
+            ConsumeFoodAuthoritative();
+        }
+
+        [ServerRpc]
+        private void ConsumeWaterServerRpc()
+        {
+            ConsumeWaterAuthoritative();
+        }
+
+        private void ConsumeFoodAuthoritative()
         {
             if (Hunger.Value >= maximumHunger) return;
             PlayerInventory inventory = GetComponent<PlayerInventory>();
@@ -95,8 +126,7 @@ namespace RustSurvival.Survival
             Hunger.Value = Mathf.Min(maximumHunger, Hunger.Value + 35f);
         }
 
-        [ServerRpc]
-        public void ConsumeWaterServerRpc()
+        private void ConsumeWaterAuthoritative()
         {
             if (Thirst.Value >= maximumThirst) return;
             PlayerInventory inventory = GetComponent<PlayerInventory>();
