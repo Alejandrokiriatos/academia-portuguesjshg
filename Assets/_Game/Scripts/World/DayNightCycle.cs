@@ -18,6 +18,8 @@ namespace RustSurvival.World
         public readonly NetworkVariable<float> TimeOfDay =
             new(0.28f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        private float _offlineTime;
+
         public override void OnNetworkSpawn()
         {
             if (IsServer) TimeOfDay.Value = startingTime;
@@ -25,10 +27,24 @@ namespace RustSurvival.World
 
         private void Update()
         {
-            if (IsServer && IsSpawned)
-                TimeOfDay.Value = (TimeOfDay.Value + Time.deltaTime / fullDayDurationSeconds) % 1f;
+            if (IsSpawned)
+            {
+                if (IsServer)
+                    TimeOfDay.Value = (TimeOfDay.Value + Time.deltaTime / fullDayDurationSeconds) % 1f;
 
-            ApplyLighting(TimeOfDay.Value);
+                ApplyLighting(TimeOfDay.Value);
+            }
+            else
+            {
+                // The offline prototype is intentionally not spawned through NGO.
+                _offlineTime = (_offlineTime + Time.deltaTime / fullDayDurationSeconds) % 1f;
+                ApplyLighting(_offlineTime == 0f ? startingTime : _offlineTime);
+            }
+        }
+
+        private void Start()
+        {
+            _offlineTime = startingTime;
         }
 
         private void ApplyLighting(float time)
