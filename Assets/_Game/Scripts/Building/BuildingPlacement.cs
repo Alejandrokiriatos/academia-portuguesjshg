@@ -257,6 +257,16 @@ namespace RustSurvival.Building
                 float.IsNaN(yaw) || float.IsInfinity(yaw) ||
                 Vector3.Distance(transform.position, position) > placementReach + 1.25f)
                 return;
+
+            Vector3 eye = transform.position + Vector3.up * 1.5f;
+            Vector3 toPlacement = position - eye;
+            float placementDistance = toPlacement.magnitude;
+            if (placementDistance <= 0.01f ||
+                !Physics.Raycast(eye, toPlacement / placementDistance, out RaycastHit serverHit,
+                    placementDistance + 1f, placementLayers, QueryTriggerInteraction.Ignore) ||
+                Vector3.Distance(serverHit.point, position) > 2.0f)
+                return;
+
             if (!CanPlaceAt(position, yaw, transform))
                 return;
 
