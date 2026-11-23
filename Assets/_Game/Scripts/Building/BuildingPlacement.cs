@@ -244,7 +244,12 @@ namespace RustSurvival.Building
             if (prefabIndex < 0 || structurePrefabs == null || prefabIndex >= structurePrefabs.Length)
                 return;
             NetworkObject prefab = structurePrefabs[prefabIndex];
-            if (prefab == null || Vector3.Distance(transform.position, position) > placementReach + 1.25f)
+            if (prefab == null ||
+                float.IsNaN(position.x) || float.IsInfinity(position.x) ||
+                float.IsNaN(position.y) || float.IsInfinity(position.y) ||
+                float.IsNaN(position.z) || float.IsInfinity(position.z) ||
+                float.IsNaN(yaw) || float.IsInfinity(yaw) ||
+                Vector3.Distance(transform.position, position) > placementReach + 1.25f)
                 return;
             if (!CanPlaceAt(position, yaw, transform))
                 return;
