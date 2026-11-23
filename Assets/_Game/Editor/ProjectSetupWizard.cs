@@ -113,6 +113,11 @@ namespace RustSurvival.EditorTools
             PlayerSettings.defaultScreenHeight = 720;
             PlayerSettings.defaultWebScreenWidth = 1280;
             PlayerSettings.defaultWebScreenHeight = 720;
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
 
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.rustsurvival.game");
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Standalone, "com.rustsurvival.game");
@@ -139,8 +144,9 @@ namespace RustSurvival.EditorTools
             }
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
             PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+            PlayerSettings.Android.forceInternetPermission = true;
         }
 
         private static void EnsureFolders()
