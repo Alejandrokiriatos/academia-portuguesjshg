@@ -83,7 +83,7 @@ GitHub Actions no puede compilar Unity sin activar el Editor. Para mantener la l
 
 1. Instala **Unity Hub** y entra con tu cuenta Unity.
 2. En Unity Hub abre **Preferences > Licenses > Add > Get a free Personal license**.
-3. La licencia local queda en Windows normalmente en `C:\\ProgramData\\Unity\\Unity_lic.ulf`.
+3. La licencia local queda en Windows normalmente en `C:\ProgramData\Unity\Unity_lic.ulf`.
 4. Abre ese archivo con un editor de texto y copia todo su contenido.
 5. En GitHub entra en **Settings > Secrets and variables > Actions** y crea:
    - `UNITY_LICENSE`: contenido completo del archivo `.ulf`.
