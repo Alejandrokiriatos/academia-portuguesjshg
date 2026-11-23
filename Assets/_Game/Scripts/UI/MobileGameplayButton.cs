@@ -21,7 +21,8 @@ namespace RustSurvival.UI
             Drink,
             ToggleBuild,
             PlaceBuilding,
-            RotateBuilding
+            RotateBuilding,
+            NextBuilding
         }
 
         [SerializeField] private ActionType action;
@@ -51,6 +52,9 @@ namespace RustSurvival.UI
                     break;
                 case ActionType.RotateBuilding:
                     player.GetComponent<BuildingPlacement>()?.RotateFromMobileButton();
+                    break;
+                case ActionType.NextBuilding:
+                    player.GetComponent<BuildingPlacement>()?.SelectNextStructure();
                     break;
             }
         }
