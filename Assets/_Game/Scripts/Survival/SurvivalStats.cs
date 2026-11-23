@@ -5,7 +5,10 @@ using RustSurvival.Resources;
 
 namespace RustSurvival.Survival
 {
-    /// <summary>Server-ticked survival values. Clients can request food/water use.</summary>
+    /// <summary>
+    /// Server-authoritative replicated stats in multiplayer and local-only fields
+    /// in offline mode. This avoids writing NGO NetworkVariables before spawn.
+    /// </summary>
     public sealed class SurvivalStats : NetworkBehaviour
     {
         [SerializeField, Min(1f)] private float maximumHealth = 100f;
@@ -20,12 +23,19 @@ namespace RustSurvival.Survival
         public readonly NetworkVariable<float> Hunger = new(100f);
         public readonly NetworkVariable<float> Thirst = new(100f);
 
+        private float _offlineHealth;
+        private float _offlineHunger;
+        private float _offlineThirst;
         private float _tick;
         private InputAction _eatAction;
         private InputAction _drinkAction;
 
         private void Awake()
         {
+            _offlineHealth = maximumHealth;
+            _offlineHunger = maximumHunger;
+            _offlineThirst = maximumThirst;
+
             _eatAction = new InputAction("Eat", InputActionType.Button, "<Keyboard>/h");
             _eatAction.AddBinding("<Gamepad>/buttonWest");
             _drinkAction = new InputAction("Drink", InputActionType.Button, "<Keyboard>/j");
@@ -60,6 +70,10 @@ namespace RustSurvival.Survival
             }
         }
 
+        public float GetHealth() => IsSpawned ? Health.Value : _offlineHealth;
+        public float GetHunger() => IsSpawned ? Hunger.Value : _offlineHunger;
+        public float GetThirst() => IsSpawned ? Thirst.Value : _offlineThirst;
+
         private void Update()
         {
             if (!IsSpawned || IsOwner)
@@ -76,14 +90,27 @@ namespace RustSurvival.Survival
             float elapsed = _tick;
             _tick = 0f;
 
-            Hunger.Value = Mathf.Max(0f, Hunger.Value - hungerDrainPerSecond * elapsed);
-            Thirst.Value = Mathf.Max(0f, Thirst.Value - thirstDrainPerSecond * elapsed);
-
+            float hunger = Mathf.Max(0f, GetHunger() - hungerDrainPerSecond * elapsed);
+            float thirst = Mathf.Max(0f, GetThirst() - thirstDrainPerSecond * elapsed);
             float damage = 0f;
-            if (Hunger.Value <= 0f) damage += starvationDamagePerSecond;
-            if (Thirst.Value <= 0f) damage += dehydrationDamagePerSecond;
-            if (damage > 0f)
-                Health.Value = Mathf.Max(0f, Health.Value - damage * elapsed);
+
+            if (hunger <= 0f) damage += starvationDamagePerSecond;
+            if (thirst <= 0f) damage += dehydrationDamagePerSecond;
+
+            float health = Mathf.Max(0f, GetHealth() - damage * elapsed);
+
+            if (IsSpawned)
+            {
+                Hunger.Value = hunger;
+                Thirst.Value = thirst;
+                Health.Value = health;
+            }
+            else
+            {
+                _offlineHunger = hunger;
+                _offlineThirst = thirst;
+                _offlineHealth = health;
+            }
         }
 
         public void TryConsumeFood()
@@ -120,18 +147,26 @@ namespace RustSurvival.Survival
 
         private void ConsumeFoodAuthoritative()
         {
-            if (Hunger.Value >= maximumHunger) return;
+            if (GetHunger() >= maximumHunger) return;
+
             PlayerInventory inventory = GetComponent<PlayerInventory>();
             if (inventory == null || !inventory.TrySpend(ResourceType.Food, 1)) return;
-            Hunger.Value = Mathf.Min(maximumHunger, Hunger.Value + 35f);
+
+            float newHunger = Mathf.Min(maximumHunger, GetHunger() + 35f);
+            if (IsSpawned) Hunger.Value = newHunger;
+            else _offlineHunger = newHunger;
         }
 
         private void ConsumeWaterAuthoritative()
         {
-            if (Thirst.Value >= maximumThirst) return;
+            if (GetThirst() >= maximumThirst) return;
+
             PlayerInventory inventory = GetComponent<PlayerInventory>();
             if (inventory == null || !inventory.TrySpend(ResourceType.Water, 1)) return;
-            Thirst.Value = Mathf.Min(maximumThirst, Thirst.Value + 40f);
+
+            float newThirst = Mathf.Min(maximumThirst, GetThirst() + 40f);
+            if (IsSpawned) Thirst.Value = newThirst;
+            else _offlineThirst = newThirst;
         }
     }
 }
