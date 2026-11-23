@@ -114,12 +114,15 @@ namespace RustSurvival.Player
         public override void OnNetworkSpawn()
         {
             bool isLocalPlayer = IsOwner;
+
+            if (moveJoystick == null) moveJoystick = FindObjectOfType<MobileJoystick>();
+            if (lookArea == null) lookArea = FindObjectOfType<MobileLookArea>();
+
             if (ownerCamera != null)
-                ownerCamera.enabled = isLocalPlayer;
-            if (isLocalPlayer && ownerCamera != null)
             {
+                ownerCamera.enabled = isLocalPlayer;
                 AudioListener listener = ownerCamera.GetComponent<AudioListener>();
-                if (listener != null) listener.enabled = true;
+                if (listener != null) listener.enabled = isLocalPlayer;
             }
         }
 
