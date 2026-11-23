@@ -38,10 +38,10 @@ namespace RustSurvival.UI
                     player.GetComponent<GatheringInteractor>()?.TryHarvest();
                     break;
                 case ActionType.Eat:
-                    player.GetComponent<SurvivalStats>()?.ConsumeFoodServerRpc();
+                    player.GetComponent<SurvivalStats>()?.TryConsumeFood();
                     break;
                 case ActionType.Drink:
-                    player.GetComponent<SurvivalStats>()?.ConsumeWaterServerRpc();
+                    player.GetComponent<SurvivalStats>()?.TryConsumeWater();
                     break;
                 case ActionType.ToggleBuild:
                     BuildingPlacement building = player.GetComponent<BuildingPlacement>();
