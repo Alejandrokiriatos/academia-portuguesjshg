@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using RustSurvival.Resources;
 
 namespace RustSurvival.Survival
 {
@@ -54,8 +55,8 @@ namespace RustSurvival.Survival
         public void ConsumeFoodServerRpc()
         {
             if (Hunger.Value >= maximumHunger) return;
-            Resources.PlayerInventory inventory = GetComponent<Resources.PlayerInventory>();
-            if (inventory == null || !inventory.TrySpend(Resources.ResourceType.Food, 1)) return;
+            PlayerInventory inventory = GetComponent<PlayerInventory>();
+            if (inventory == null || !inventory.TrySpend(ResourceType.Food, 1)) return;
             Hunger.Value = Mathf.Min(maximumHunger, Hunger.Value + 35f);
         }
 
@@ -63,16 +64,9 @@ namespace RustSurvival.Survival
         public void ConsumeWaterServerRpc()
         {
             if (Thirst.Value >= maximumThirst) return;
-            Resources.PlayerInventory inventory = GetComponent<Resources.PlayerInventory>();
-            if (inventory == null || !inventory.TrySpend(Resources.ResourceType.Water, 1)) return;
+            PlayerInventory inventory = GetComponent<PlayerInventory>();
+            if (inventory == null || !inventory.TrySpend(ResourceType.Water, 1)) return;
             Thirst.Value = Mathf.Min(maximumThirst, Thirst.Value + 40f);
-        }
-
-        [ServerRpc]
-        public void HealServerRpc(float amount)
-        {
-            // Kept for future medkits. Do not expose arbitrary healing to clients:
-            // this endpoint is intentionally disabled until item validation is added.
         }
     }
 }
