@@ -68,7 +68,7 @@ namespace RustSurvival.Networking
                     maxPlayers,
                     options);
 
-                unityTransport.SetRelayServerData(new RelayServerData(allocation, relayConnectionType));
+                ConfigureRelayTransport(allocation);
                 if (!networkManager.StartHost())
                     throw new InvalidOperationException("NGO no pudo iniciar como host.");
 
@@ -101,7 +101,7 @@ namespace RustSurvival.Networking
                     throw new InvalidOperationException("La sala no contiene un código Relay válido.");
 
                 JoinAllocation allocation = await RelayService.Instance.JoinAllocationAsync(relayData.Value);
-                unityTransport.SetRelayServerData(new RelayServerData(allocation, relayConnectionType));
+                ConfigureRelayTransport(allocation);
 
                 if (!networkManager.StartClient())
                     throw new InvalidOperationException("NGO no pudo iniciar como cliente.");
@@ -145,6 +145,22 @@ namespace RustSurvival.Networking
             _currentLobby = null;
             _isLobbyHost = false;
             SetStatus("Desconectado");
+        }
+
+        private void ConfigureRelayTransport(Allocation allocation)
+        {
+            bool isWebPlatform = Application.platform == RuntimePlatform.WebGLPlayer;
+            string connectionType = isWebPlatform ? "wss" : relayConnectionType;
+            unityTransport.UseWebSockets = isWebPlatform;
+            unityTransport.SetRelayServerData(new RelayServerData(allocation, connectionType));
+        }
+
+        private void ConfigureRelayTransport(JoinAllocation allocation)
+        {
+            bool isWebPlatform = Application.platform == RuntimePlatform.WebGLPlayer;
+            string connectionType = isWebPlatform ? "wss" : relayConnectionType;
+            unityTransport.UseWebSockets = isWebPlatform;
+            unityTransport.SetRelayServerData(new RelayServerData(allocation, connectionType));
         }
 
         private async Task EnsureServicesAsync()
