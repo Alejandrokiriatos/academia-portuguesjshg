@@ -9,8 +9,12 @@ namespace RustSurvival.World
     {
         [SerializeField] private NetworkObject treePrefab;
         [SerializeField] private NetworkObject rockPrefab;
+        [SerializeField] private NetworkObject foodPrefab;
+        [SerializeField] private NetworkObject waterPrefab;
         [SerializeField, Range(0, 600)] private int treeCount = 180;
         [SerializeField, Range(0, 300)] private int rockCount = 85;
+        [SerializeField, Range(0, 120)] private int foodCacheCount = 35;
+        [SerializeField, Range(0, 80)] private int waterCacheCount = 18;
         [SerializeField, Min(2f)] private float minimumSpacing = 7f;
         [SerializeField] private int spawnSeed = 8819;
 
@@ -39,10 +43,12 @@ namespace RustSurvival.World
 
             Random.State previous = Random.state;
             Random.InitState(spawnSeed);
-            var occupied = new System.Collections.Generic.List<Vector3>(treeCount + rockCount);
+            var occupied = new System.Collections.Generic.List<Vector3>(treeCount + rockCount + foodCacheCount + waterCacheCount);
 
             SpawnBatch(terrain, treePrefab, treeCount, occupied, 0.55f);
             SpawnBatch(terrain, rockPrefab, rockCount, occupied, 0.9f);
+            SpawnBatch(terrain, foodPrefab, foodCacheCount, occupied, 0.55f);
+            SpawnBatch(terrain, waterPrefab, waterCacheCount, occupied, 0.55f);
 
             Random.state = previous;
         }
