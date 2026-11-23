@@ -7,7 +7,7 @@ Proyecto de supervivencia y construcción multijugador para Windows y Android (i
 - Unity **2022.3.62f1 LTS**.
 - Universal Render Pipeline (URP) 14.
 - Nuevo Input System.
-- Netcode for GameObjects 1.9.1 + Unity Transport 1.3.4.
+- Netcode for GameObjects 1.9.1 + Unity Transport 2.0.2.
 - Unity Authentication 2.7.4, Lobby 1.2.1 y Relay 1.0.5.
 
 Estas versiones se fijaron tomando como base las versiones publicadas por Unity para la línea 2022.3. No abras este primer prototipo con Unity 6 hasta preparar y probar una migración de los paquetes de Lobby/Relay independientes.
@@ -54,7 +54,7 @@ ProjectSettings/ProjectVersion.txt
 ## Preparar el proyecto en Windows
 
 1. Instala **Unity Hub** y Unity Editor **2022.3.62f1**.
-2. En Unity Hub instala también **Android Build Support**, incluyendo Android SDK & NDK Tools y OpenJDK. Instala Windows Build Support para crear builds de PC.
+2. Para compilar localmente, instala también **Android Build Support**, incluyendo Android SDK & NDK Tools y OpenJDK. La compilación que estamos preparando en GitHub instala esos componentes en el runner.
 3. Clona el repositorio y abre la carpeta raíz con **Unity Hub > Add > Add project from disk**.
 4. Espera a que Package Manager descargue todos los paquetes de `Packages/manifest.json`.
 5. En **Edit > Project Settings > Player > Other Settings**, establece **Active Input Handling = Input System Package (New)**. Acepta el reinicio del Editor.
@@ -73,38 +73,38 @@ ProjectSettings/ProjectVersion.txt
 El primer prototipo utiliza un host jugador como autoridad a través de Relay. **No es un servidor dedicado ni ofrece protección antitrampas frente al propio anfitrión.** Para servidores públicos persistentes habrá que migrar la misma lógica de validación a procesos de servidor dedicado.
 
 
-## Probar el juego con un solo enlace
+## Descargar la aplicación Android
 
-La compilación se automatiza desde GitHub Actions. Después de completar la activación de Unity y habilitar Pages una sola vez:
+El repositorio está configurado para producir **un APK Android**, no una versión WebGL ni un instalador de escritorio.
 
-1. Abre **Actions** y selecciona **Build and publish Rust Survival test builds**.
-2. Pulsa **Run workflow** en la rama `main`.
-3. Al terminar el job, abre el juego WebGL aquí:  
-   **https://alejandrokiriatos.github.io/academia-portuguesjshg/**
-4. En el menú del juego pulsa **JUGAR SOLO — SIN INTERNET**. Una vez cargado el juego, el modo local no usa Relay ni necesita una cuenta de servicios.
-5. En el mismo resultado de Actions estarán los artefactos `RustSurvival-Android-APK` y `RustSurvival-Windows` si sus builds terminan correctamente.
+### Preparación única de licencia Unity
 
-### Preparación de una sola vez (necesaria para compilar Unity)
+GitHub Actions no puede compilar Unity sin activar el Editor. Para mantener la licencia fuera del repositorio:
 
-**A. Unity Personal license**
+1. Instala **Unity Hub** y entra con tu cuenta Unity.
+2. En Unity Hub abre **Preferences > Licenses > Add > Get a free Personal license**.
+3. La licencia local queda en Windows normalmente en `C:\\ProgramData\\Unity\\Unity_lic.ulf`.
+4. Abre ese archivo con un editor de texto y copia todo su contenido.
+5. En GitHub entra en **Settings > Secrets and variables > Actions** y crea:
+   - `UNITY_LICENSE`: contenido completo del archivo `.ulf`.
+   - `UNITY_EMAIL`: correo de tu cuenta Unity.
+   - `UNITY_PASSWORD`: contraseña de tu cuenta Unity.
 
-GameCI necesita activar Unity en el servidor que compila. En Windows:
+No subas el archivo, la contraseña ni la licencia al repositorio ni a Issues. Introdúcelos solamente como secretos privados de Actions. GameCI requiere esos secretos para activar Unity durante la compilación. Consulta la guía actual de activación de GameCI antes de cambiar la versión del Editor.
 
-1. Abre Unity Hub, inicia sesión y entra en **Preferences > Licenses > Add > Get a free Personal license**.
-2. Copia el contenido del archivo `C:\ProgramData\Unity\Unity_lic.ulf`.
-3. En GitHub abre **Settings > Secrets and variables > Actions > New repository secret** y crea:
-   - `UNITY_LICENSE` = contenido completo del archivo `.ulf`.
-   - `UNITY_EMAIL` = correo de la cuenta Unity.
-   - `UNITY_PASSWORD` = contraseña de la cuenta Unity.
+### Generar y descargar el APK
 
-No publiques estos valores en Issues, chats ni archivos del repositorio. Después de copiar la licencia, cierra sesión en Unity Hub si GameCI informa que la licencia Personal sigue ocupada por el equipo local.
+1. Abre la pestaña **Actions** del repositorio.
+2. Selecciona **Build Rust Survival Android APK**.
+3. Pulsa **Run workflow** en la rama `main`.
+4. Cuando termine correctamente, GitHub publicará una versión de prueba con el archivo `RustSurvival.apk`.
+5. Descárgalo desde **Releases** e instálalo en el teléfono Android. Autoriza la instalación desde el navegador si Android lo solicita.
 
-**B. GitHub Pages**
+Enlace directo que quedará disponible después de la primera compilación correcta:
 
-1. Abre **Settings > Pages**.
-2. En **Build and deployment > Source**, selecciona **GitHub Actions**.
+**https://github.com/Alejandrokiriatos/academia-portuguesjshg/releases/latest/download/RustSurvival.apk**
 
-Con esto queda preparado el flujo de publicación. La página de juego no aparecerá hasta que el primer workflow termine y despliegue el build WebGL correctamente. Las compilaciones de Android y Windows se descargan desde la sección **Artifacts** del mismo resultado de Actions.
+La compilación aún no se ha ejecutado con Unity. Si el runner detecta errores de C# o de configuración, se corregirán a partir de los registros de Actions antes de entregar un APK funcional.
 
 ## Controles
 
