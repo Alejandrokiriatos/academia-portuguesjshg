@@ -423,7 +423,7 @@ namespace RustSurvival.EditorTools
             Vector2 position, Color fillColor)
         {
             GameObject background = CreateUiImage(name + "Background", parent,
-                Vector2.zero, Vector2.zero, Vector2.zero, position,
+                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), position,
                 new Vector2(330f, 26f), new Color(0.025f, 0.03f, 0.04f, 0.78f));
 
             GameObject fill = CreateUiImage(name + "Fill", background.transform,
@@ -448,9 +448,9 @@ namespace RustSurvival.EditorTools
             GameObject textObject = new(name);
             textObject.transform.SetParent(parent, false);
             RectTransform rect = textObject.AddComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.zero;
-            rect.pivot = Vector2.zero;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
 
