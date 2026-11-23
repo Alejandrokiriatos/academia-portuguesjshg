@@ -80,15 +80,10 @@ namespace RustSurvival.EditorTools
         {
             switch (target)
             {
-                case BuildTarget.WebGL:
-                    return "Builds/WebGL";
                 case BuildTarget.Android:
                     return "Builds/Android/RustSurvival.apk";
-                case BuildTarget.StandaloneWindows:
-                case BuildTarget.StandaloneWindows64:
-                    return "Builds/Windows/RustSurvival.exe";
                 default:
-                    throw new NotSupportedException("Build target no configurado: " + target);
+                    throw new NotSupportedException("Este pipeline compila únicamente Android. Target recibido: " + target);
             }
         }
     }
