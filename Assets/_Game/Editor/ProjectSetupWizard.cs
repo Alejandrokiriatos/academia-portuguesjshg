@@ -510,6 +510,7 @@ namespace RustSurvival.EditorTools
             CreateGameplayButton(canvasObject.transform, "BUILD", MobileGameplayButton.ActionType.ToggleBuild, new Vector2(-135f, 430f));
             CreateGameplayButton(canvasObject.transform, "PLACE", MobileGameplayButton.ActionType.PlaceBuilding, new Vector2(-255f, 430f));
             CreateGameplayButton(canvasObject.transform, "TURN", MobileGameplayButton.ActionType.RotateBuilding, new Vector2(-375f, 430f));
+            CreateGameplayButton(canvasObject.transform, "NEXT", MobileGameplayButton.ActionType.NextBuilding, new Vector2(-495f, 430f));
 
             // Keep the generated EventSystem in the scene; input module uses the New Input System.
             EditorUtility.SetDirty(eventSystem);
