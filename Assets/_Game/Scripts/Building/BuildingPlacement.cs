@@ -34,6 +34,8 @@ namespace RustSurvival.Building
         private float _yaw;
         private bool _buildMode;
         private bool _localCanPlace;
+        private bool _hasGhostState;
+        private bool _lastGhostValid;
 
         private void Awake()
         {
@@ -152,6 +154,7 @@ namespace RustSurvival.Building
             _ghost = null;
             _ghostRenderers = null;
             _localCanPlace = false;
+            _hasGhostState = false;
         }
 
         private void UpdateGhost()
@@ -196,17 +199,23 @@ namespace RustSurvival.Building
 
         private void UpdateGhostMaterial(bool valid)
         {
+            if (_ghostRenderers == null) return;
+            if (_hasGhostState && _lastGhostValid == valid) return;
+
             Material material = valid ? validGhostMaterial : invalidGhostMaterial;
-            if (material == null || _ghostRenderers == null) return;
+            if (material == null) return;
             foreach (Renderer renderer in _ghostRenderers)
             {
                 if (renderer != null)
                 {
                     Material[] materials = new Material[renderer.sharedMaterials.Length];
                     for (int i = 0; i < materials.Length; i++) materials[i] = material;
-                    renderer.materials = materials;
+                    renderer.sharedMaterials = materials;
                 }
             }
+
+            _lastGhostValid = valid;
+            _hasGhostState = true;
         }
 
         [ServerRpc]
@@ -220,20 +229,20 @@ namespace RustSurvival.Building
             if (!CanPlaceAt(position, yaw, transform))
                 return;
 
-            PlayerInventory inventory = GetComponent<Resources.PlayerInventory>();
+            PlayerInventory inventory = GetComponent<PlayerInventory>();
             if (inventory == null) return;
 
             int wood = prefabIndex < woodCosts.Length ? woodCosts[prefabIndex] : 0;
             int stone = prefabIndex < stoneCosts.Length ? stoneCosts[prefabIndex] : 0;
 
             if (inventory.GetAmount(ResourceType.Wood) < wood ||
-                inventory.GetAmount(Resources.ResourceType.Stone) < stone)
+                inventory.GetAmount(ResourceType.Stone) < stone)
                 return;
 
-            if (wood > 0 && !inventory.TrySpend(Resources.ResourceType.Wood, wood)) return;
-            if (stone > 0 && !inventory.TrySpend(Resources.ResourceType.Stone, stone))
+            if (wood > 0 && !inventory.TrySpend(ResourceType.Wood, wood)) return;
+            if (stone > 0 && !inventory.TrySpend(ResourceType.Stone, stone))
             {
-                if (wood > 0) inventory.TryAdd(Resources.ResourceType.Wood, wood);
+                if (wood > 0) inventory.TryAdd(ResourceType.Wood, wood);
                 return;
             }
 
