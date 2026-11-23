@@ -407,9 +407,13 @@ namespace RustSurvival.EditorTools
         private static void CreateNetworkManager(GameObject player, GameObject tree, GameObject rock,
             GameObject food, GameObject water, GameObject foundation, GameObject wall, GameObject roof)
         {
+            // Keep the GameObject inactive until its transport, player prefab and
+            // NetworkPrefabsList are configured. This prevents NetworkManager.Awake
+            // from initializing with an incomplete network configuration.
             GameObject root = new("NetworkManager");
-            NetworkManager manager = root.AddComponent<NetworkManager>();
+            root.SetActive(false);
             UnityTransport transport = root.AddComponent<UnityTransport>();
+            NetworkManager manager = root.AddComponent<NetworkManager>();
             manager.NetworkConfig.NetworkTransport = transport;
             manager.NetworkConfig.PlayerPrefab = player;
             manager.NetworkConfig.ConnectionApproval = true;
@@ -441,6 +445,8 @@ namespace RustSurvival.EditorTools
             root.AddComponent<NetworkSpawnApproval>();
             SessionDebugPanel sessionPanel = root.AddComponent<SessionDebugPanel>();
             CreatePrototypeMenu(sessionPanel);
+
+            root.SetActive(true);
         }
 
         private static void CreatePrototypeMenu(SessionDebugPanel sessionPanel)
