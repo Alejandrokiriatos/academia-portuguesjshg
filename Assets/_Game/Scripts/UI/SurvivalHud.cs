@@ -1,3 +1,4 @@
+using RustSurvival.Player;
 using RustSurvival.Resources;
 using RustSurvival.Survival;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine.UI;
 
 namespace RustSurvival.UI
 {
-    /// <summary>Optional HUD binder. Assign sliders and labels in the player HUD prefab.</summary>
+    /// <summary>HUD binder for the locally owned player's replicated survival/inventory values.</summary>
     public sealed class SurvivalHud : MonoBehaviour
     {
         [SerializeField] private SurvivalStats stats;
@@ -15,9 +16,18 @@ namespace RustSurvival.UI
         [SerializeField] private Slider thirstBar;
         [SerializeField] private Text woodText;
         [SerializeField] private Text stoneText;
+        [SerializeField] private Text foodText;
+        [SerializeField] private Text waterText;
 
         private void Update()
         {
+            PlayerMovement localPlayer = PlayerMovement.LocalPlayer;
+            if (localPlayer != null)
+            {
+                if (stats == null) stats = localPlayer.GetComponent<SurvivalStats>();
+                if (inventory == null) inventory = localPlayer.GetComponent<PlayerInventory>();
+            }
+
             if (stats != null)
             {
                 SetBar(healthBar, stats.Health.Value);
@@ -27,8 +37,10 @@ namespace RustSurvival.UI
 
             if (inventory != null)
             {
-                if (woodText != null) woodText.text = inventory.Wood.Value.ToString();
-                if (stoneText != null) stoneText.text = inventory.Stone.Value.ToString();
+                if (woodText != null) woodText.text = "Madera: " + inventory.Wood.Value;
+                if (stoneText != null) stoneText.text = "Piedra: " + inventory.Stone.Value;
+                if (foodText != null) foodText.text = "Comida: " + inventory.Food.Value;
+                if (waterText != null) waterText.text = "Agua: " + inventory.Water.Value;
             }
         }
 
