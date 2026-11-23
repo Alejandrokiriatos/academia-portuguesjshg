@@ -44,6 +44,20 @@ namespace RustSurvival.Resources
             }
         }
 
+        /// <summary>Local-only harvest path for browser/desktop/mobile solo testing.</summary>
+        public void ApplyHarvestOffline(PlayerInventory inventory, float damage)
+        {
+            if (IsSpawned || inventory == null || damage <= 0f)
+                return;
+
+            Health.Value = Mathf.Max(0f, Health.Value - damage);
+            if (Health.Value <= 0f)
+            {
+                inventory.TryAdd(resource, rewardAmount);
+                Destroy(gameObject);
+            }
+        }
+
         private void OnHealthChanged(float previous, float current)
         {
             ApplyVisualState(current);
