@@ -87,7 +87,7 @@ El primer prototipo utiliza un host jugador como autoridad a través de Relay. *
 | Activar construcción | V | BUILD |
 | Colocar pieza | Enter o clic izquierdo | PLACE |
 | Girar pieza | R | TURN |
-| Elegir pieza | 1 / 2 / 3 | (selección táctil pendiente) |
+| Elegir pieza | 1 / 2 / 3 | NEXT |
 | Cancelar construcción | Escape | BUILD de nuevo |
 
 ## Límites conocidos de esta primera base
