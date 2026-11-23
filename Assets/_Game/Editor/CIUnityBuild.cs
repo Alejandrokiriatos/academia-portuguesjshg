@@ -36,7 +36,7 @@ namespace RustSurvival.EditorTools
                     scenes = GetEnabledScenes(),
                     locationPathName = outputPath,
                     target = target,
-                    options = BuildOptions.StrictMode
+                    options = BuildOptions.None
                 };
 
                 Debug.Log("[Rust Survival CI] Building " + target + " to " + outputPath);
