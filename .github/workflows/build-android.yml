@@ -81,5 +81,5 @@ jobs:
             This is an early prototype build, not a production release.
           files: Builds/Android/RustSurvival.apk
           draft: false
-          prerelease: true
+          prerelease: false
           make_latest: true
