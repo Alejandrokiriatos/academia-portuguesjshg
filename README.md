@@ -72,6 +72,40 @@ ProjectSettings/ProjectVersion.txt
 
 El primer prototipo utiliza un host jugador como autoridad a través de Relay. **No es un servidor dedicado ni ofrece protección antitrampas frente al propio anfitrión.** Para servidores públicos persistentes habrá que migrar la misma lógica de validación a procesos de servidor dedicado.
 
+
+## Probar el juego con un solo enlace
+
+La compilación se automatiza desde GitHub Actions. Después de completar la activación de Unity y habilitar Pages una sola vez:
+
+1. Abre **Actions** y selecciona **Build and publish Rust Survival test builds**.
+2. Pulsa **Run workflow** en la rama `main`.
+3. Al terminar el job, abre el juego WebGL aquí:  
+   **https://alejandrokiriatos.github.io/academia-portuguesjshg/**
+4. En el menú del juego pulsa **JUGAR SOLO — SIN INTERNET**. Una vez cargado el juego, el modo local no usa Relay ni necesita una cuenta de servicios.
+5. En el mismo resultado de Actions estarán los artefactos `RustSurvival-Android-APK` y `RustSurvival-Windows` si sus builds terminan correctamente.
+
+### Preparación de una sola vez (necesaria para compilar Unity)
+
+**A. Unity Personal license**
+
+GameCI necesita activar Unity en el servidor que compila. En Windows:
+
+1. Abre Unity Hub, inicia sesión y entra en **Preferences > Licenses > Add > Get a free Personal license**.
+2. Copia el contenido del archivo `C:\ProgramData\Unity\Unity_lic.ulf`.
+3. En GitHub abre **Settings > Secrets and variables > Actions > New repository secret** y crea:
+   - `UNITY_LICENSE` = contenido completo del archivo `.ulf`.
+   - `UNITY_EMAIL` = correo de la cuenta Unity.
+   - `UNITY_PASSWORD` = contraseña de la cuenta Unity.
+
+No publiques estos valores en Issues, chats ni archivos del repositorio. Después de copiar la licencia, cierra sesión en Unity Hub si GameCI informa que la licencia Personal sigue ocupada por el equipo local.
+
+**B. GitHub Pages**
+
+1. Abre **Settings > Pages**.
+2. En **Build and deployment > Source**, selecciona **GitHub Actions**.
+
+Con esto queda preparado el flujo de publicación. La página de juego no aparecerá hasta que el primer workflow termine y despliegue el build WebGL correctamente. Las compilaciones de Android y Windows se descargan desde la sección **Artifacts** del mismo resultado de Actions.
+
 ## Controles
 
 | Acción | PC | Móvil |
