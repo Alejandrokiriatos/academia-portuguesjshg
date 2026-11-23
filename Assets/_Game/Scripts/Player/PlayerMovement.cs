@@ -128,6 +128,17 @@ namespace RustSurvival.Player
             }
         }
 
+        public void InitializeOfflineOwner()
+        {
+            LocalPlayer = this;
+            if (ownerCamera != null)
+            {
+                ownerCamera.enabled = true;
+                AudioListener listener = ownerCamera.GetComponent<AudioListener>();
+                if (listener != null) listener.enabled = true;
+            }
+        }
+
         public override void OnNetworkDespawn()
         {
             if (LocalPlayer == this) LocalPlayer = null;
