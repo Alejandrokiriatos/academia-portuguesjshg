@@ -316,12 +316,18 @@ namespace RustSurvival.EditorTools
         private static GameObject CreatePlayerPrefab(GameObject foundation, GameObject wall, GameObject roof,
             Material ghostValid, Material ghostInvalid)
         {
-            GameObject root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            root.name = "Player";
-            Collider oldCollider = root.GetComponent<Collider>();
+            // Root origin is the CharacterController feet. Keep the visible mesh
+            // centered at the controller midpoint so the character does not float.
+            GameObject root = new("Player");
+            GameObject body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.name = "BodyMesh";
+            body.transform.SetParent(root.transform, false);
+            body.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            body.transform.localScale = new Vector3(0.68f, 0.9f, 0.68f);
+            Collider oldCollider = body.GetComponent<Collider>();
             if (oldCollider != null) UnityEngine.Object.DestroyImmediate(oldCollider);
 
-            root.GetComponent<Renderer>().sharedMaterial =
+            body.GetComponent<Renderer>().sharedMaterial =
                 CreateMaterial("M_Player_Greybox", new Color(0.43f, 0.48f, 0.52f), 0f, 0.25f);
 
             root.AddComponent<NetworkObject>();
