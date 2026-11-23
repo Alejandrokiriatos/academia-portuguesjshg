@@ -78,7 +78,7 @@ namespace RustSurvival.Networking
             if (offlineButton != null) offlineButton.interactable = !started && !_busy && offlineMode != null;
             if (createHostButton != null) createHostButton.interactable = !started && !_busy && sessions != null;
             if (joinButton != null) joinButton.interactable = !started && !_busy && sessions != null;
-            if (leaveButton != null) leaveButton.interactable = !_busy && sessions != null;
+            if (leaveButton != null) leaveButton.interactable = !_busy && sessions != null && !string.IsNullOrEmpty(sessions.CurrentLobbyCode);
             if (joinCodeInput != null) joinCodeInput.interactable = !started && !_busy;
         }
 
