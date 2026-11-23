@@ -24,7 +24,7 @@ namespace RustSurvival.Resources
 
         public bool TryAdd(ResourceType type, int amount)
         {
-            if (!IsServer || amount <= 0) return false;
+            if ((IsSpawned && !IsServer) || amount <= 0) return false;
             switch (type)
             {
                 case ResourceType.Wood: Wood.Value += amount; break;
