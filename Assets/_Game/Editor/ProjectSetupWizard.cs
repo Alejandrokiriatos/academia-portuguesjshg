@@ -5,6 +5,7 @@ using RustSurvival.Core;
 using RustSurvival.Networking;
 using RustSurvival.Player;
 using RustSurvival.Resources;
+using RustSurvival.Survival;
 using RustSurvival.UI;
 using RustSurvival.World;
 using Unity.Netcode;
@@ -48,7 +49,7 @@ namespace RustSurvival.EditorTools
             GameObject foundation = CreateBoxNetworkPrefab("Foundation", new Vector3(2f, 0.25f, 2f), foundationMat, "Building");
             GameObject wall = CreateBoxNetworkPrefab("Wall", new Vector3(2f, 2f, 0.22f), wallMat, "Building");
             GameObject roof = CreateTriangleRoofPrefab(roofMat);
-            GameObject player = CreatePlayerPrefab();
+            GameObject player = CreatePlayerPrefab(foundation, wall, roof);
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CreateWorldRoot(tree, rock);
@@ -242,7 +243,7 @@ namespace RustSurvival.EditorTools
             return prefab;
         }
 
-        private static GameObject CreatePlayerPrefab()
+        private static GameObject CreatePlayerPrefab(GameObject foundation, GameObject wall, GameObject roof)
         {
             GameObject root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             root.name = "Player";
@@ -264,7 +265,7 @@ namespace RustSurvival.EditorTools
 
             PlayerMovement movement = root.AddComponent<PlayerMovement>();
             root.AddComponent<PlayerInventory>();
-            root.AddComponent<Survival.SurvivalStats>();
+            root.AddComponent<SurvivalStats>();
             GatheringInteractor gathering = root.AddComponent<GatheringInteractor>();
             BuildingPlacement building = root.AddComponent<BuildingPlacement>();
 
@@ -283,6 +284,13 @@ namespace RustSurvival.EditorTools
             SetObjectField(movement, "ownerCamera", camera);
             SetObjectField(gathering, "playerCamera", camera);
             SetObjectField(building, "playerCamera", camera);
+            SerializedObject buildSerialized = new(building);
+            SerializedProperty structureArray = buildSerialized.FindProperty("structurePrefabs");
+            structureArray.arraySize = 3;
+            structureArray.GetArrayElementAtIndex(0).objectReferenceValue = foundation.GetComponent<NetworkObject>();
+            structureArray.GetArrayElementAtIndex(1).objectReferenceValue = wall.GetComponent<NetworkObject>();
+            structureArray.GetArrayElementAtIndex(2).objectReferenceValue = roof.GetComponent<NetworkObject>();
+            buildSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             string path = Prefabs + "/Characters/Player.prefab";
             DeleteIfExists(path);
@@ -332,6 +340,7 @@ namespace RustSurvival.EditorTools
             manager.NetworkConfig.PlayerPrefab = player;
             manager.NetworkConfig.ConnectionApproval = true;
 
+            RegisterPrefab(manager, player);
             RegisterPrefab(manager, tree);
             RegisterPrefab(manager, rock);
             RegisterPrefab(manager, foundation);
@@ -415,7 +424,7 @@ namespace RustSurvival.EditorTools
             text.text = label;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.fontSize = 22;
             text.raycastTarget = false;
         }
