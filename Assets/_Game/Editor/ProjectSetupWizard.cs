@@ -63,6 +63,7 @@ namespace RustSurvival.EditorTools
             CreateLighting();
             CreateNetworkManager(player, tree, rock, food, water, foundation, wall, roof);
             CreateMobileControls();
+            CreateSurvivalHud();
             var performance = new GameObject("PlatformPerformance");
             performance.AddComponent<MobilePerformanceSettings>();
 
@@ -374,6 +375,93 @@ namespace RustSurvival.EditorTools
                 Debug.LogWarning("No se pudo registrar el prefab de red " + prefab.name +
                     ". Regístralo en NetworkManager > Network Prefabs. " + exception.Message);
             }
+        }
+
+
+        private static void CreateSurvivalHud()
+        {
+            GameObject canvasObject = new("SurvivalHUD");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 20;
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            canvasObject.AddComponent<GraphicRaycaster>();
+
+            SurvivalHud hud = canvasObject.AddComponent<SurvivalHud>();
+
+            Slider health = CreateHudSlider(canvasObject.transform, "Health", "SALUD",
+                new Vector2(26f, -32f), new Color(0.70f, 0.13f, 0.12f, 0.92f));
+            Slider hunger = CreateHudSlider(canvasObject.transform, "Hunger", "HAMBRE",
+                new Vector2(26f, -76f), new Color(0.86f, 0.58f, 0.12f, 0.92f));
+            Slider thirst = CreateHudSlider(canvasObject.transform, "Thirst", "SED",
+                new Vector2(26f, -120f), new Color(0.13f, 0.48f, 0.86f, 0.92f));
+
+            Text wood = CreateHudText(canvasObject.transform, "WoodCount", "Madera: 0",
+                new Vector2(26f, -170f), new Vector2(160f, 32f));
+            Text stone = CreateHudText(canvasObject.transform, "StoneCount", "Piedra: 0",
+                new Vector2(192f, -170f), new Vector2(160f, 32f));
+            Text food = CreateHudText(canvasObject.transform, "FoodCount", "Comida: 0",
+                new Vector2(358f, -170f), new Vector2(160f, 32f));
+            Text water = CreateHudText(canvasObject.transform, "WaterCount", "Agua: 0",
+                new Vector2(524f, -170f), new Vector2(160f, 32f));
+
+            SerializedObject so = new(hud);
+            so.FindProperty("healthBar").objectReferenceValue = health;
+            so.FindProperty("hungerBar").objectReferenceValue = hunger;
+            so.FindProperty("thirstBar").objectReferenceValue = thirst;
+            so.FindProperty("woodText").objectReferenceValue = wood;
+            so.FindProperty("stoneText").objectReferenceValue = stone;
+            so.FindProperty("foodText").objectReferenceValue = food;
+            so.FindProperty("waterText").objectReferenceValue = water;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Slider CreateHudSlider(Transform parent, string name, string label,
+            Vector2 position, Color fillColor)
+        {
+            GameObject background = CreateUiImage(name + "Background", parent,
+                Vector2.zero, Vector2.zero, Vector2.zero, position,
+                new Vector2(330f, 26f), new Color(0.025f, 0.03f, 0.04f, 0.78f));
+
+            GameObject fill = CreateUiImage(name + "Fill", background.transform,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                Vector2.zero, fillColor);
+            Slider slider = background.AddComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = 100f;
+            slider.value = 100f;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.fillRect = fill.GetComponent<RectTransform>();
+            slider.targetGraphic = background.GetComponent<Image>();
+
+            CreateHudText(parent, name + "Label", label, position + new Vector2(340f, 0f),
+                new Vector2(90f, 28f));
+            return slider;
+        }
+
+        private static Text CreateHudText(Transform parent, string name, string value,
+            Vector2 position, Vector2 size)
+        {
+            GameObject textObject = new(name);
+            textObject.transform.SetParent(parent, false);
+            RectTransform rect = textObject.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.pivot = Vector2.zero;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+
+            Text text = textObject.AddComponent<Text>();
+            text.text = value;
+            text.alignment = TextAnchor.MiddleLeft;
+            text.color = Color.white;
+            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 20;
+            text.raycastTarget = false;
+            return text;
         }
 
         private static void CreateMobileControls()
