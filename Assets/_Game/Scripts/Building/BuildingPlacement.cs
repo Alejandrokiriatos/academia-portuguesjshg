@@ -138,7 +138,13 @@ namespace RustSurvival.Building
 
             Vector3 position = _ghost.transform.position;
             if (IsSpawned)
+            {
                 RequestPlaceServerRpc(_selectedIndex, position, _yaw);
+            }
+            else
+            {
+                PlaceOffline(_selectedIndex, position, _yaw);
+            }
         }
 
         private void CreateGhost()
@@ -205,6 +211,34 @@ namespace RustSurvival.Building
 
             _localCanPlace = CanPlaceAt(position, _yaw, transform);
             UpdateGhostMaterial(_localCanPlace);
+        }
+
+        private void PlaceOffline(int prefabIndex, Vector3 position, float yaw)
+        {
+            if (prefabIndex < 0 || structurePrefabs == null ||
+                prefabIndex >= structurePrefabs.Length || structurePrefabs[prefabIndex] == null)
+                return;
+            if (!CanPlaceAt(position, yaw, transform)) return;
+
+            PlayerInventory inventory = GetComponent<PlayerInventory>();
+            if (inventory == null) return;
+
+            int wood = prefabIndex < woodCosts.Length ? woodCosts[prefabIndex] : 0;
+            int stone = prefabIndex < stoneCosts.Length ? stoneCosts[prefabIndex] : 0;
+
+            if (inventory.GetAmount(ResourceType.Wood) < wood ||
+                inventory.GetAmount(ResourceType.Stone) < stone)
+                return;
+
+            if (wood > 0 && !inventory.TrySpend(ResourceType.Wood, wood)) return;
+            if (stone > 0 && !inventory.TrySpend(ResourceType.Stone, stone))
+            {
+                if (wood > 0) inventory.TryAdd(ResourceType.Wood, wood);
+                return;
+            }
+
+            Instantiate(structurePrefabs[prefabIndex].gameObject,
+                position, Quaternion.Euler(0f, yaw, 0f));
         }
 
         private bool CanPlaceAt(Vector3 position, float yaw, Transform ignoredRoot)
