@@ -33,7 +33,7 @@ namespace RustSurvival.Networking
                 Vector3 center = terrain.transform.position +
                     new Vector3(terrain.terrainData.size.x * 0.5f, 0f, terrain.terrainData.size.z * 0.5f);
                 spawn = new Vector3(center.x,
-                    terrain.SampleHeight(center) + terrain.transform.position.y + 2f,
+                    terrain.SampleHeight(center) + terrain.transform.position.y + 0.08f,
                     center.z);
             }
 
