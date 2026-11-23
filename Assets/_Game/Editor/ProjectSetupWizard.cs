@@ -43,18 +43,25 @@ namespace RustSurvival.EditorTools
             Material foundationMat = CreateMaterial("M_Foundation_Greybox", new Color(0.47f, 0.43f, 0.35f), 0.05f, 0.22f);
             Material wallMat = CreateMaterial("M_Wall_Greybox", new Color(0.30f, 0.20f, 0.12f), 0.02f, 0.18f);
             Material roofMat = CreateMaterial("M_Roof_Greybox", new Color(0.28f, 0.29f, 0.30f), 0.48f, 0.28f);
+            Material ghostValid = CreateGhostMaterial("M_Ghost_Valid", new Color(0.10f, 0.95f, 0.22f, 0.38f));
+            Material ghostInvalid = CreateGhostMaterial("M_Ghost_Invalid", new Color(1f, 0.12f, 0.08f, 0.42f));
 
             GameObject tree = CreateResourcePrefab("Tree_Node", ResourceType.Wood, 30, bark, foliage, true);
             GameObject rock = CreateResourcePrefab("Rock_Node", ResourceType.Stone, 25, stone, stone, false);
+            GameObject food = CreateLootNodePrefab("Food_BerryBush", ResourceType.Food, 3,
+                foliage, new Color(0.75f, 0.04f, 0.08f), true);
+            GameObject water = CreateLootNodePrefab("Water_Cache", ResourceType.Water, 3,
+                CreateMaterial("M_WaterCache_Greybox", new Color(0.16f, 0.43f, 0.68f), 0.12f, 0.32f),
+                new Color(0.16f, 0.43f, 0.68f), false);
             GameObject foundation = CreateBoxNetworkPrefab("Foundation", new Vector3(2f, 0.25f, 2f), foundationMat, "Building");
             GameObject wall = CreateBoxNetworkPrefab("Wall", new Vector3(2f, 2f, 0.22f), wallMat, "Building");
             GameObject roof = CreateTriangleRoofPrefab(roofMat);
-            GameObject player = CreatePlayerPrefab(foundation, wall, roof);
+            GameObject player = CreatePlayerPrefab(foundation, wall, roof, ghostValid, ghostInvalid);
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateWorldRoot(tree, rock);
+            CreateWorldRoot(tree, rock, food, water);
             CreateLighting();
-            CreateNetworkManager(player, tree, rock, foundation, wall, roof);
+            CreateNetworkManager(player, tree, rock, food, water, foundation, wall, roof);
             CreateMobileControls();
             var performance = new GameObject("PlatformPerformance");
             performance.AddComponent<MobilePerformanceSettings>();
@@ -243,7 +250,8 @@ namespace RustSurvival.EditorTools
             return prefab;
         }
 
-        private static GameObject CreatePlayerPrefab(GameObject foundation, GameObject wall, GameObject roof)
+        private static GameObject CreatePlayerPrefab(GameObject foundation, GameObject wall, GameObject roof,
+            Material ghostValid, Material ghostInvalid)
         {
             GameObject root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             root.name = "Player";
@@ -299,7 +307,8 @@ namespace RustSurvival.EditorTools
             return prefab;
         }
 
-        private static void CreateWorldRoot(GameObject treePrefab, GameObject rockPrefab)
+        private static void CreateWorldRoot(GameObject treePrefab, GameObject rockPrefab,
+            GameObject foodPrefab, GameObject waterPrefab)
         {
             GameObject world = new("WorldRoot");
             world.AddComponent<NetworkObject>();
@@ -308,6 +317,8 @@ namespace RustSurvival.EditorTools
             WorldResourceSpawner spawner = world.AddComponent<WorldResourceSpawner>();
             SetObjectField(spawner, "treePrefab", treePrefab.GetComponent<NetworkObject>());
             SetObjectField(spawner, "rockPrefab", rockPrefab.GetComponent<NetworkObject>());
+            SetObjectField(spawner, "foodPrefab", foodPrefab.GetComponent<NetworkObject>());
+            SetObjectField(spawner, "waterPrefab", waterPrefab.GetComponent<NetworkObject>());
 
             DayNightCycle cycle = world.AddComponent<DayNightCycle>();
             GameObject sunObject = new("Directional Sun");
@@ -331,7 +342,7 @@ namespace RustSurvival.EditorTools
         }
 
         private static void CreateNetworkManager(GameObject player, GameObject tree, GameObject rock,
-            GameObject foundation, GameObject wall, GameObject roof)
+            GameObject food, GameObject water, GameObject foundation, GameObject wall, GameObject roof)
         {
             GameObject root = new("NetworkManager");
             NetworkManager manager = root.AddComponent<NetworkManager>();
@@ -343,6 +354,8 @@ namespace RustSurvival.EditorTools
             RegisterPrefab(manager, player);
             RegisterPrefab(manager, tree);
             RegisterPrefab(manager, rock);
+            RegisterPrefab(manager, food);
+            RegisterPrefab(manager, water);
             RegisterPrefab(manager, foundation);
             RegisterPrefab(manager, wall);
             RegisterPrefab(manager, roof);
@@ -399,8 +412,117 @@ namespace RustSurvival.EditorTools
             CreateMobileButton(canvasObject.transform, "CROUCH", MobileActionButton.ActionType.Crouch,
                 new Vector2(1f, 0f), new Vector2(-90f, 65f), new Vector2(96f, 96f));
 
+            CreateGameplayButton(canvasObject.transform, "HIT", MobileGameplayButton.ActionType.Harvest, new Vector2(-135f, 310f));
+            CreateGameplayButton(canvasObject.transform, "EAT", MobileGameplayButton.ActionType.Eat, new Vector2(-255f, 300f));
+            CreateGameplayButton(canvasObject.transform, "DRINK", MobileGameplayButton.ActionType.Drink, new Vector2(-375f, 300f));
+            CreateGameplayButton(canvasObject.transform, "BUILD", MobileGameplayButton.ActionType.ToggleBuild, new Vector2(-135f, 430f));
+            CreateGameplayButton(canvasObject.transform, "PLACE", MobileGameplayButton.ActionType.PlaceBuilding, new Vector2(-255f, 430f));
+            CreateGameplayButton(canvasObject.transform, "TURN", MobileGameplayButton.ActionType.RotateBuilding, new Vector2(-375f, 430f));
+
             // Keep the generated EventSystem in the scene; input module uses the New Input System.
             EditorUtility.SetDirty(eventSystem);
+        }
+
+
+        private static GameObject CreateLootNodePrefab(string name, ResourceType type, int reward,
+            Material mainMaterial, Color accentColor, bool isFood)
+        {
+            GameObject root = new(name);
+            root.AddComponent<NetworkObject>();
+            GameObject visuals = new("Visuals");
+            visuals.transform.SetParent(root.transform, false);
+
+            if (isFood)
+            {
+                CreatePrimitiveChild(PrimitiveType.Sphere, "BushCore", visuals.transform,
+                    new Vector3(0f, 0.45f, 0f), new Vector3(1.15f, 0.8f, 1.15f), mainMaterial);
+                Material berryMat = CreateMaterial("M_Berry_Greybox", accentColor, 0f, 0.2f);
+                for (int i = 0; i < 7; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / 7f;
+                    Vector3 position = new(Mathf.Cos(angle) * 0.42f, 0.62f + (i % 2) * 0.13f,
+                        Mathf.Sin(angle) * 0.42f);
+                    CreatePrimitiveChild(PrimitiveType.Sphere, "Berry_" + i, visuals.transform,
+                        position, Vector3.one * 0.16f, berryMat);
+                }
+                SphereCollider collider = root.AddComponent<SphereCollider>();
+                collider.center = new Vector3(0f, 0.45f, 0f);
+                collider.radius = 0.75f;
+            }
+            else
+            {
+                CreatePrimitiveChild(PrimitiveType.Cylinder, "WaterContainer", visuals.transform,
+                    new Vector3(0f, 0.48f, 0f), new Vector3(0.56f, 0.48f, 0.56f), mainMaterial);
+                CreatePrimitiveChild(PrimitiveType.Cube, "ContainerBand", visuals.transform,
+                    new Vector3(0f, 0.55f, 0f), new Vector3(1.18f, 0.08f, 1.18f), mainMaterial);
+                BoxCollider collider = root.AddComponent<BoxCollider>();
+                collider.center = new Vector3(0f, 0.48f, 0f);
+                collider.size = new Vector3(1.25f, 1.05f, 1.25f);
+            }
+
+            ResourceNode node = root.AddComponent<ResourceNode>();
+            SerializedObject so = new(node);
+            so.FindProperty("resource").enumValueIndex = (int)type;
+            so.FindProperty("rewardAmount").intValue = reward;
+            so.FindProperty("maximumHealth").floatValue = 60f;
+            so.FindProperty("visualRoot").objectReferenceValue = visuals;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            string path = Prefabs + "/Environment/" + name + ".prefab";
+            DeleteIfExists(path);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+            UnityEngine.Object.DestroyImmediate(root);
+            return prefab;
+        }
+
+        private static Material CreateGhostMaterial(string name, Color color)
+        {
+            string path = Materials + "/" + name + ".mat";
+            Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null) return existing;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            Material material = new(shader) { name = name };
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+            if (material.HasProperty("_Surface")) material.SetFloat("_Surface", 1f);
+            if (material.HasProperty("_Blend")) material.SetFloat("_Blend", 0f);
+            if (material.HasProperty("_SrcBlend")) material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            if (material.HasProperty("_DstBlend")) material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 0f);
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.renderQueue = (int)RenderQueue.Transparent;
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        private static void CreateGameplayButton(Transform parent, string label,
+            MobileGameplayButton.ActionType action, Vector2 position)
+        {
+            GameObject button = CreateUiImage(label + "GameplayButton", parent,
+                new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0.5f),
+                position, new Vector2(82f, 82f), new Color(0.12f, 0.12f, 0.12f, 0.58f));
+            MobileGameplayButton handler = button.AddComponent<MobileGameplayButton>();
+            SerializedObject so = new(handler);
+            so.FindProperty("action").enumValueIndex = (int)action;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject textObject = new(label + "GameplayLabel");
+            textObject.transform.SetParent(button.transform, false);
+            RectTransform rect = textObject.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            Text text = textObject.AddComponent<Text>();
+            text.text = label;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.font = UnityEngine.Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 18;
+            text.raycastTarget = false;
         }
 
         private static void CreateMobileButton(Transform parent, string label,
