@@ -2,6 +2,8 @@ name: Build Rust Survival Android APK
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write
