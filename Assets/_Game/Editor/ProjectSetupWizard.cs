@@ -18,6 +18,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -63,8 +64,10 @@ namespace RustSurvival.EditorTools
             CreateWorldRoot(tree, rock, food, water);
             CreateLighting();
             CreateNetworkManager(player, tree, rock, food, water, foundation, wall, roof);
+            CreateOfflineController(player, tree, rock, food, water);
             CreateMobileControls();
             CreateSurvivalHud();
+            ConfigurePlayerSettings();
             var performance = new GameObject("PlatformPerformance");
             performance.AddComponent<MobilePerformanceSettings>();
 
@@ -79,13 +82,47 @@ namespace RustSurvival.EditorTools
             AssetDatabase.Refresh();
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
 
-            EditorUtility.DisplayDialog(
-                "Rust Survival — prototipo preparado",
-                "Se generaron la escena, el jugador, recursos y piezas de construcción de prueba. " +
-                "Los modelos son placeholders de primitivas, no el arte PBR final. " +
-                "Abre PrototypeWorld.unity y configura Unity Services Project ID para probar Relay/Lobby. " +
-                "Si URP no se asignó automáticamente, crea el URP Asset desde Assets > Create > Rendering > URP Asset (with Universal Renderer) y asígnalo en Project Settings > Graphics.",
-                "Aceptar");
+            if (!Application.isBatchMode)
+            {
+                EditorUtility.DisplayDialog(
+                    "Rust Survival — prototipo preparado",
+                    "Se generaron la escena, el jugador, recursos, controles y piezas de construcción. " +
+                    "Los modelos son placeholders 3D, no el arte PBR final. " +
+                    "El modo JUGAR SOLO no necesita internet. El modo Relay requiere configurar Unity Services Project ID.",
+                    "Aceptar");
+            }
+        }
+
+        private static void CreateOfflineController(GameObject player, GameObject tree,
+            GameObject rock, GameObject food, GameObject water)
+        {
+            GameObject root = new("OfflineModeController");
+            OfflineModeController offline = root.AddComponent<OfflineModeController>();
+            SetObjectField(offline, "playerPrefab", player);
+            SetObjectField(offline, "treePrefab", tree);
+            SetObjectField(offline, "rockPrefab", rock);
+            SetObjectField(offline, "foodPrefab", food);
+            SetObjectField(offline, "waterPrefab", water);
+        }
+
+        private static void ConfigurePlayerSettings()
+        {
+            PlayerSettings.companyName = "Rust Survival Studio";
+            PlayerSettings.productName = "Rust Survival";
+            PlayerSettings.defaultScreenWidth = 1280;
+            PlayerSettings.defaultScreenHeight = 720;
+            PlayerSettings.defaultWebScreenWidth = 1280;
+            PlayerSettings.defaultWebScreenHeight = 720;
+
+            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.rustsurvival.game");
+            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Standalone, "com.rustsurvival.game");
+            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.WebGL, "com.rustsurvival.game");
+
+            PlayerSettings.activeInputHandler = PlayerSettings.ActiveInputHandler.InputSystemPackage;
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         }
 
         private static void EnsureFolders()
@@ -683,19 +720,45 @@ namespace RustSurvival.EditorTools
         private static void TryAssignUrpAsset()
         {
             string[] guids = AssetDatabase.FindAssets("t:UniversalRenderPipelineAsset");
-            if (guids.Length == 0)
+            UniversalRenderPipelineAsset asset = null;
+
+            if (guids.Length > 0)
             {
-                Debug.LogWarning("URP está instalado por Package Manager, pero no hay URP Asset creado. Usa Assets > Create > Rendering > URP Asset (with Universal Renderer) y asígnalo en Project Settings > Graphics.");
-                return;
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(path);
             }
 
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            RenderPipelineAsset asset = AssetDatabase.LoadAssetAtPath<RenderPipelineAsset>(path);
-            if (asset == null) return;
+            if (asset == null)
+            {
+                string rendererPath = Root + "/Settings/RustSurvivalRenderer.asset";
+                string pipelinePath = Root + "/Settings/RustSurvivalURP.asset";
+
+                UniversalRendererData rendererData =
+                    AssetDatabase.LoadAssetAtPath<UniversalRendererData>(rendererPath);
+                if (rendererData == null)
+                {
+                    rendererData = ScriptableObject.CreateInstance<UniversalRendererData>();
+                    AssetDatabase.CreateAsset(rendererData, rendererPath);
+                }
+
+                asset = UniversalRenderPipelineAsset.Create(rendererData);
+                asset.name = "RustSurvivalURP";
+                asset.renderScale = 1f;
+                asset.msaaSampleCount = 2;
+                asset.shadowDistance = 75f;
+                AssetDatabase.CreateAsset(asset, pipelinePath);
+                AssetDatabase.SaveAssets();
+            }
 
             GraphicsSettings.renderPipelineAsset = asset;
             QualitySettings.renderPipeline = asset;
+            for (int i = 0; i < QualitySettings.names.Length; i++)
+            {
+                QualitySettings.SetQualityLevel(i, false);
+                QualitySettings.renderPipeline = asset;
+            }
             EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
         }
     }
 }
