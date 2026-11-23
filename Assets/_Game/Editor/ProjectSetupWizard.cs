@@ -118,7 +118,25 @@ namespace RustSurvival.EditorTools
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Standalone, "com.rustsurvival.game");
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.WebGL, "com.rustsurvival.game");
 
-            PlayerSettings.activeInputHandler = PlayerSettings.ActiveInputHandler.InputSystemPackage;
+            // Unity serializes Active Input Handling as:
+            // 0 = old Input Manager, 1 = Input System Package, 2 = Both.
+            // Use SerializedObject because this setting is not a stable public API
+            // across all 2022.3 patch releases.
+            PlayerSettings[] settingsObjects = UnityEngine.Resources.FindObjectsOfTypeAll<PlayerSettings>();
+            if (settingsObjects != null && settingsObjects.Length > 0)
+            {
+                SerializedObject playerSettings = new(settingsObjects[0]);
+                SerializedProperty inputHandler = playerSettings.FindProperty("activeInputHandler");
+                if (inputHandler != null)
+                {
+                    inputHandler.intValue = 1;
+                    playerSettings.ApplyModifiedProperties();
+                }
+                else
+                {
+                    Debug.LogWarning("No se encontró PlayerSettings.activeInputHandler; configúralo en Project Settings > Player.");
+                }
+            }
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
             PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
