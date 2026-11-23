@@ -210,8 +210,14 @@ namespace RustSurvival.Player
 
         private void CacheServerInput(Vector2 move, float yaw, bool jump, bool sprint, bool crouch)
         {
+            // Reject malformed client values before they reach server-side movement.
+            if (float.IsNaN(yaw) || float.IsInfinity(yaw)) return;
+            if (float.IsNaN(move.x) || float.IsInfinity(move.x) ||
+                float.IsNaN(move.y) || float.IsInfinity(move.y))
+                move = Vector2.zero;
+
             _serverMoveInput = Vector2.ClampMagnitude(move, 1f);
-            _serverYaw = yaw;
+            _serverYaw = Mathf.Repeat(yaw, 360f);
             _serverJump |= jump;
             _serverSprint = sprint;
             _serverCrouch = crouch;
