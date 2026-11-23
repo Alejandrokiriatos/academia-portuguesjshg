@@ -72,7 +72,7 @@ namespace RustSurvival.Core
 
             Vector3 center = terrain.transform.position +
                 new Vector3(terrain.terrainData.size.x * 0.5f, 0f, terrain.terrainData.size.z * 0.5f);
-            center.y = terrain.SampleHeight(center) + terrain.transform.position.y + 2f;
+            center.y = terrain.SampleHeight(center) + terrain.transform.position.y + 0.08f;
 
             GameObject player = Instantiate(playerPrefab, center, Quaternion.identity);
             player.name = "LocalPlayer";
