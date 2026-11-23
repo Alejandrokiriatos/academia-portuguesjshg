@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using RustSurvival.Resources;
 
 namespace RustSurvival.Survival
@@ -20,6 +21,34 @@ namespace RustSurvival.Survival
         public readonly NetworkVariable<float> Thirst = new(100f);
 
         private float _tick;
+        private InputAction _eatAction;
+        private InputAction _drinkAction;
+
+        private void Awake()
+        {
+            _eatAction = new InputAction("Eat", InputActionType.Button, "<Keyboard>/h");
+            _eatAction.AddBinding("<Gamepad>/buttonWest");
+            _drinkAction = new InputAction("Drink", InputActionType.Button, "<Keyboard>/j");
+            _drinkAction.AddBinding("<Gamepad>/buttonNorth");
+        }
+
+        private void OnEnable()
+        {
+            _eatAction?.Enable();
+            _drinkAction?.Enable();
+        }
+
+        private void OnDisable()
+        {
+            _eatAction?.Disable();
+            _drinkAction?.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            _eatAction?.Dispose();
+            _drinkAction?.Dispose();
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -33,6 +62,12 @@ namespace RustSurvival.Survival
 
         private void Update()
         {
+            if (IsSpawned && IsOwner)
+            {
+                if (_eatAction.WasPressedThisFrame()) ConsumeFoodServerRpc();
+                if (_drinkAction.WasPressedThisFrame()) ConsumeWaterServerRpc();
+            }
+
             if (!IsServer || !IsSpawned) return;
 
             _tick += Time.deltaTime;
