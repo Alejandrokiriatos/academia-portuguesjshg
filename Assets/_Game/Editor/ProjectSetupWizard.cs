@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using RustSurvival.Building;
 using RustSurvival.Core;
 using RustSurvival.Networking;
@@ -352,29 +353,32 @@ namespace RustSurvival.EditorTools
             manager.NetworkConfig.PlayerPrefab = player;
             manager.NetworkConfig.ConnectionApproval = true;
 
-            RegisterPrefab(manager, player);
-            RegisterPrefab(manager, tree);
-            RegisterPrefab(manager, rock);
-            RegisterPrefab(manager, food);
-            RegisterPrefab(manager, water);
-            RegisterPrefab(manager, foundation);
-            RegisterPrefab(manager, wall);
-            RegisterPrefab(manager, roof);
+            // Persist the network prefab registry as an asset so both host and
+            // joining clients load the same prefab hashes before connecting.
+            string listPath = Root + "/Settings/NetworkPrefabsList.asset";
+            DeleteIfExists(listPath);
+            NetworkPrefabsList networkPrefabs = ScriptableObject.CreateInstance<NetworkPrefabsList>();
+            networkPrefabs.name = "NetworkPrefabsList";
+
+            GameObject[] prefabs =
+            {
+                player, tree, rock, food, water, foundation, wall, roof
+            };
+            foreach (GameObject prefab in prefabs)
+            {
+                if (prefab != null)
+                    networkPrefabs.Add(new NetworkPrefab { Prefab = prefab });
+            }
+
+            AssetDatabase.CreateAsset(networkPrefabs, listPath);
+            if (manager.NetworkConfig.Prefabs == null)
+                manager.NetworkConfig.Prefabs = new NetworkPrefabs();
+            manager.NetworkConfig.Prefabs.NetworkPrefabsLists = new List<NetworkPrefabsList> { networkPrefabs };
+            EditorUtility.SetDirty(manager);
 
             root.AddComponent<NetworkSessionManager>();
             root.AddComponent<NetworkSpawnApproval>();
             root.AddComponent<SessionDebugPanel>();
-        }
-
-        private static void RegisterPrefab(NetworkManager manager, GameObject prefab)
-        {
-            if (manager == null || prefab == null) return;
-            try { manager.AddNetworkPrefab(prefab); }
-            catch (Exception exception)
-            {
-                Debug.LogWarning("No se pudo registrar el prefab de red " + prefab.name +
-                    ". Regístralo en NetworkManager > Network Prefabs. " + exception.Message);
-            }
         }
 
 
