@@ -99,6 +99,11 @@ namespace RustSurvival.Building
                 PlaceCurrent();
         }
 
+        public void ToggleBuildMode()
+        {
+            SetBuildMode(!_buildMode);
+        }
+
         public void SetBuildMode(bool enabled)
         {
             _buildMode = enabled;
