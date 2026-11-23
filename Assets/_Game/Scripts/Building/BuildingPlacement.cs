@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using RustSurvival.Resources;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -219,13 +220,13 @@ namespace RustSurvival.Building
             if (!CanPlaceAt(position, yaw, transform))
                 return;
 
-            Resources.PlayerInventory inventory = GetComponent<Resources.PlayerInventory>();
+            PlayerInventory inventory = GetComponent<Resources.PlayerInventory>();
             if (inventory == null) return;
 
             int wood = prefabIndex < woodCosts.Length ? woodCosts[prefabIndex] : 0;
             int stone = prefabIndex < stoneCosts.Length ? stoneCosts[prefabIndex] : 0;
 
-            if (inventory.GetAmount(Resources.ResourceType.Wood) < wood ||
+            if (inventory.GetAmount(ResourceType.Wood) < wood ||
                 inventory.GetAmount(Resources.ResourceType.Stone) < stone)
                 return;
 
