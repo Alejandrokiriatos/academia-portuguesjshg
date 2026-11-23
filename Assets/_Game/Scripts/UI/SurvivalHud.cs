@@ -30,9 +30,9 @@ namespace RustSurvival.UI
 
             if (stats != null)
             {
-                SetBar(healthBar, stats.Health.Value);
-                SetBar(hungerBar, stats.Hunger.Value);
-                SetBar(thirstBar, stats.Thirst.Value);
+                SetBar(healthBar, stats.GetHealth());
+                SetBar(hungerBar, stats.GetHunger());
+                SetBar(thirstBar, stats.GetThirst());
             }
 
             if (inventory != null)
