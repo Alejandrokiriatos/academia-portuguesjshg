@@ -50,7 +50,7 @@ namespace RustSurvival.Resources
             }
         }
 
-        /// <summary>Local-only harvest path for browser/desktop/mobile solo testing.</summary>
+        /// <summary>Local-only harvest path for offline Android and desktop solo testing.</summary>
         public void ApplyHarvestOffline(PlayerInventory inventory, float damage)
         {
             if (IsSpawned || inventory == null || damage <= 0f)
