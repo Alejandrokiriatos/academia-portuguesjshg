@@ -15,6 +15,12 @@ namespace RustSurvival.Resources
             new(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         public ResourceType Resource => resource;
+        private float _offlineHealth;
+
+        private void Awake()
+        {
+            _offlineHealth = maximumHealth;
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -50,8 +56,9 @@ namespace RustSurvival.Resources
             if (IsSpawned || inventory == null || damage <= 0f)
                 return;
 
-            Health.Value = Mathf.Max(0f, Health.Value - damage);
-            if (Health.Value <= 0f)
+            _offlineHealth = Mathf.Max(0f, _offlineHealth - damage);
+            ApplyVisualState(_offlineHealth);
+            if (_offlineHealth <= 0f)
             {
                 inventory.TryAdd(resource, rewardAmount);
                 Destroy(gameObject);
