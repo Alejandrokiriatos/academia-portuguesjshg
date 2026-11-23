@@ -44,7 +44,7 @@ namespace RustSurvival.UI
                     break;
                 case ActionType.ToggleBuild:
                     BuildingPlacement building = player.GetComponent<BuildingPlacement>();
-                    if (building != null) building.SetBuildMode(!building.IsInBuildMode);
+                    if (building != null) building.ToggleBuildMode();
                     break;
                 case ActionType.PlaceBuilding:
                     player.GetComponent<BuildingPlacement>()?.PlaceCurrent();
